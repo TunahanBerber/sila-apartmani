@@ -4,10 +4,11 @@ Liquid Glass tasarımlı apartman yönetim paneli.
 
 - **Genel Bakış**: aylık özet, ödeme oranı, 12 aylık gider grafiği, kategori dağılımı, yaklaşan ödemeler
 - **Giderler**: ay ay gider takibi, ödendi/bekliyor/gecikti durumu, kategori filtresi, arama. Tekrarlayan bir gider ödendiğinde sonraki dönemin kaydı otomatik açılır.
+- **Aidat**: 12 daire × 12 ay tablosu; yönetici hücreye dokunarak ödendi/ödenmedi işaretler, aylık aidat tutarını belirler. Onay bekleyen sakinler ve sakin listesi de burada (sadece yönetici).
 - **Öneriler**: sakinler öneri gönderir ve oy verir, yönetim durum ve not ekler
 - **Duyurular**: sabitlenebilir, önem derecesi olan duyurular
 
-Uygulama sadece giriş yapanlara açıktır. Sakinler **e-posta + şifre** ile kayıt olur, ilk girişte daire numarası ve adını girer (aynı dairede birden fazla kişi olabilir). Öneriler bu bilgiyle gönderilir, herkes bir öneriye bir kez oy verir. Gider, duyuru ve öneri durumu düzenlemek **yönetici hesabı** ister.
+Uygulama sadece onaylı hesaplara açıktır. Sakinler **e-posta + şifre** ile kayıt olur, ilk girişte daire numarası ve adını girer (aynı dairede birden fazla kişi olabilir). **Yönetici onaylayana kadar** hiçbir veriyi göremezler. Öneriler bu bilgiyle gönderilir, herkes bir öneriye bir kez oy verir. Gider, duyuru ve öneri durumu düzenlemek **yönetici hesabı** ister.
 
 | Katman | Teknoloji |
 | --- | --- |
@@ -18,7 +19,7 @@ Uygulama sadece giriş yapanlara açıktır. Sakinler **e-posta + şifre** ile k
 
 Backend kodu `supabase/` klasöründedir:
 
-- `migrations/`: tablolar, RLS kuralları ve fonksiyonlar (`get_stats`, `list_suggestions`, `toggle_vote`, `toggle_expense_paid`, `save_profile`, `is_admin`)
+- `migrations/`: tablolar, RLS kuralları ve fonksiyonlar (`get_stats`, `list_suggestions`, `toggle_vote`, `toggle_expense_paid`, `toggle_due`, `save_profile`, `review_resident`, `is_member`, `is_admin`)
 - `functions/register`: kayıt (e-posta doğrulaması beklemeden hesap açar)
 - `seed.sql`: bugünün tarihine göre son 12 ayın örnek verileri
 
@@ -32,7 +33,7 @@ Backend kodu `supabase/` klasöründedir:
    ```
 3. Bu e-posta ve şifreyle girin. Yöneticilerden daire bilgisi istenmez.
 
-Bir sakini çıkarmak için Supabase panelinde **Authentication → Users**'tan kullanıcıyı silin (daire kaydı da silinir).
+Sakinleri **Aidat** sekmesinden onaylayın, reddedin ya da erişimlerini kaldırın. Hesabı tamamen silmek için Supabase panelinde **Authentication → Users**'ı kullanın.
 
 Daire sayısı (aidat hesaplaması için) `app_settings` tablosundadır:
 

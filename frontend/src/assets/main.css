@@ -969,7 +969,7 @@ ul { list-style: none; margin: 0; padding: 0; }
   z-index: 40;
   display: grid;
   grid-template-columns: repeat(var(--n), 1fr);
-  width: min(560px, calc(100% - 28px));
+  width: min(640px, calc(100% - 28px));
   height: 68px;
   padding: 6px;
   border-radius: 999px;
@@ -1010,7 +1010,7 @@ ul { list-style: none; margin: 0; padding: 0; }
 .tab:active { transform: scale(0.9); }
 .tab.active { color: var(--accent); }
 .tab span { transition: opacity 0.25s, max-height 0.3s; max-height: 20px; white-space: nowrap; }
-.tabbar.compact { width: min(300px, calc(100% - 28px)); height: 56px; }
+.tabbar.compact { width: min(340px, calc(100% - 28px)); height: 56px; }
 .tabbar.compact .tab span { opacity: 0; max-height: 0; }
 
 /* ---------- Bildirimler ---------- */
@@ -1194,3 +1194,127 @@ ul.list { position: relative; }
   font-size: 13px;
 }
 .auth-link:hover { color: var(--text); }
+
+/* ---------- Aidat ---------- */
+.amount-line { display: flex; align-items: center; gap: 8px; }
+.amount-form { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
+.amount-form input {
+  width: 110px;
+  height: 32px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--track);
+  color: var(--text);
+  font: inherit;
+  font-weight: 650;
+}
+.amount-form input:focus { outline: 2px solid color-mix(in srgb, var(--accent) 60%, transparent); }
+
+.dues-panel { transition: opacity 0.25s; }
+.dues-panel.loading { opacity: 0.55; }
+.dues-scroll {
+  overflow-x: auto;
+  margin: 0 -22px -22px 0;
+  padding: 0 22px 22px 0;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+}
+.dues-table { width: 100%; min-width: 760px; border-collapse: separate; border-spacing: 0 4px; font-size: 13px; }
+.dues-table th, .dues-table td { padding: 2px; text-align: center; font-weight: 600; white-space: nowrap; }
+.dues-table thead th { color: var(--muted); font-size: 12px; padding-bottom: 6px; text-transform: capitalize; }
+.dues-table thead th.current { color: var(--accent); }
+.dues-table td.current { background: color-mix(in srgb, var(--accent) 7%, transparent); }
+.dues-table tfoot td, .dues-table tfoot th { color: var(--muted); font-size: 12px; padding-top: 8px; }
+.dues-table .sticky {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  text-align: left;
+  padding-right: 10px;
+  border-radius: 12px;
+}
+.dues-table thead th.sticky, .dues-table tfoot th.sticky { z-index: 2; }
+.dues-table tbody th.sticky { display: flex; align-items: center; gap: 8px; min-width: 64px; }
+.dues-table tr.mine th.sticky .apt-badge { background: var(--accent); color: #fff; }
+.dues-table tr.mine td:not(.total-col) { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.dues-table .total-col { color: var(--muted); font-size: 12px; padding-left: 10px; }
+.apt-names { font-size: 11.5px; font-weight: 500; max-width: 110px; overflow: hidden; text-overflow: ellipsis; }
+
+.apt-badge {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  background: var(--track);
+  font-size: 13px;
+  font-weight: 700;
+}
+.resident-row .apt-badge { width: 36px; height: 36px; border-radius: 12px; }
+.row-actions { display: flex; align-items: center; gap: 8px; }
+
+.dues-cell {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-width: 38px;
+  height: 34px;
+  border: 0;
+  border-radius: 10px;
+  color: #fff;
+  transition: transform 0.15s, background 0.2s;
+}
+.dues-cell:not(:disabled) { cursor: pointer; }
+.dues-cell:not(:disabled):hover { transform: scale(1.08); }
+.dues-cell:not(:disabled):active { transform: scale(0.92); }
+.dues-cell:disabled { cursor: default; opacity: 1; }
+.dues-cell.paid { background: linear-gradient(180deg, color-mix(in srgb, var(--success) 95%, #fff), var(--success)); box-shadow: 0 4px 12px -6px var(--success); }
+.dues-cell.late { background: color-mix(in srgb, var(--danger) 22%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--danger) 45%, transparent); }
+.dues-cell.due { background: color-mix(in srgb, var(--warn) 18%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--warn) 45%, transparent); }
+.dues-cell.future { background: var(--track); }
+
+.dues-dot { display: inline-block; width: 10px; height: 10px; border-radius: 4px; }
+.dues-dot.paid { background: var(--success); }
+.dues-dot.late { background: color-mix(in srgb, var(--danger) 50%, transparent); }
+.dues-dot.due { background: color-mix(in srgb, var(--warn) 45%, transparent); }
+.dues-dot.future { background: var(--track); box-shadow: inset 0 0 0 1px var(--muted); }
+
+.dues-panel .panel-head { flex-wrap: wrap; gap: 10px; }
+.admin-pill span { white-space: nowrap; }
+
+.auth-status {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 16px;
+  border-radius: 20px;
+  --t: var(--warn);
+  background: color-mix(in srgb, var(--t) 10%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--t) 30%, transparent);
+}
+.auth-status.rejected { --t: var(--danger); }
+.auth-status-icon { color: var(--t); flex: none; margin-top: 1px; }
+.auth-status strong { display: block; margin-bottom: 4px; }
+
+.approvals { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--warn) 35%, transparent); }
+
+@media (max-width: 640px) {
+  .dues-scroll { margin: 0 -18px -18px 0; padding: 0 18px 18px 0; }
+  .dues-table .sticky { background: color-mix(in srgb, var(--bg) 94%, transparent); }
+  .resident-row { flex-wrap: wrap; }
+  .resident-row .row-actions { margin-left: 48px; }
+}
+
+.notice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  border-radius: 20px;
+  color: var(--warn);
+  font-size: 14px;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--warn) 35%, transparent);
+}
+.notice span { flex: 1; color: var(--text); }

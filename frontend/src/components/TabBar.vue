@@ -1,11 +1,12 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
-import { LayoutDashboard, Lightbulb, Megaphone, Receipt } from 'lucide-vue-next';
+import { LayoutDashboard, Lightbulb, Megaphone, Receipt, Wallet } from 'lucide-vue-next';
 
 const tabs = [
   { to: '/', label: 'Genel Bakış', icon: LayoutDashboard },
   { to: '/giderler', label: 'Giderler', icon: Receipt },
+  { to: '/aidat', label: 'Aidat', icon: Wallet },
   { to: '/oneriler', label: 'Öneriler', icon: Lightbulb },
   { to: '/duyurular', label: 'Duyurular', icon: Megaphone },
 ];

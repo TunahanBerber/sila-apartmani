@@ -4,6 +4,7 @@ import Dashboard from './views/Dashboard.vue';
 const routes = [
   { path: '/', name: 'dashboard', component: Dashboard, meta: { title: 'Genel Bakış' } },
   { path: '/giderler', name: 'expenses', component: () => import('./views/Expenses.vue'), meta: { title: 'Giderler' } },
+  { path: '/aidat', name: 'dues', component: () => import('./views/Dues.vue'), meta: { title: 'Aidat' } },
   { path: '/oneriler', name: 'suggestions', component: () => import('./views/Suggestions.vue'), meta: { title: 'Öneriler' } },
   { path: '/duyurular', name: 'announcements', component: () => import('./views/Announcements.vue'), meta: { title: 'Duyurular' } },
   { path: '/:pathMatch(.*)*', redirect: '/' },

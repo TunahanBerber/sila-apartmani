@@ -22,7 +22,7 @@ async function logout() {
     <span class="grain" />
   </div>
 
-  <AuthScreen v-if="session.ready && (!session.user || session.needsProfile)" />
+  <AuthScreen v-if="session.ready && !session.canUseApp" />
 
   <template v-else-if="session.ready">
     <header class="topbar">

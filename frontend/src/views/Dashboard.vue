@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue';
 import {
-  ArrowRight, CalendarClock, CircleCheck, Home, Hourglass, Megaphone, Pin, ThumbsUp, Wallet,
+  ArrowRight, CalendarClock, CircleCheck, Home, Hourglass, Megaphone, Pin, ThumbsUp, UserCheck, Wallet,
 } from 'lucide-vue-next';
 import { api } from '../api.js';
 import StatCard from '../components/StatCard.vue';
@@ -10,6 +10,7 @@ import DonutChart from '../components/DonutChart.vue';
 import ProgressRing from '../components/ProgressRing.vue';
 import StatePanel from '../components/StatePanel.vue';
 import { SUGGESTION_STATUS, expenseCategory } from '../constants.js';
+import { session } from '../stores/session.js';
 import { dueLabel, greeting, longDate, money, monthLong, shortDate, timeAgo, toMonthKey, todayIso } from '../utils/format.js';
 
 const data = ref(null);
@@ -24,6 +25,15 @@ async function load() {
   }
 }
 onMounted(load);
+
+// Yöneticiye onay bekleyen kayıtları hatırlat.
+const pendingResidents = ref(0);
+onMounted(async () => {
+  if (!session.isAdmin) return;
+  try {
+    pendingResidents.value = (await api.residents.list()).filter((r) => r.status === 'pending').length;
+  } catch {}
+});
 
 const s = computed(() => data.value?.summary);
 const remaining = computed(() => (s.value ? s.value.month_total - s.value.month_paid : 0));
@@ -40,6 +50,12 @@ const monthName = monthLong(toMonthKey());
     <StatePanel v-if="error" kind="error" :message="error" @retry="load" />
 
     <template v-else>
+      <RouterLink v-if="pendingResidents" to="/aidat" class="notice glass">
+        <UserCheck :size="18" />
+        <span><b>{{ pendingResidents }} yeni kayıt</b> onayınızı bekliyor</span>
+        <ArrowRight :size="16" />
+      </RouterLink>
+
       <section class="hero glass">
         <div class="hero-text">
           <p class="eyebrow">{{ greeting() }} · {{ longDate(todayIso()) }}</p>

@@ -141,6 +141,32 @@ export const api = {
     remove: (id) => run(supabase.from('announcements').delete().eq('id', id).select('id')).then((r) => one(r, NEEDS_ADMIN)),
   },
 
+  dues: {
+    // Bir yılın tüm ödemeleri: [{ apartment_no, month: 'YYYY-MM-01', amount, paid_at }]
+    list: (year) =>
+      run(
+        supabase
+          .from('dues_payments')
+          .select('apartment_no, month, amount, paid_at')
+          .gte('month', `${year}-01-01`)
+          .lte('month', `${year}-12-01`),
+      ),
+    toggle: (apartment_no, month) => run(supabase.rpc('toggle_due', { p_apartment_no: apartment_no, p_month: month })),
+    settings: () => run(supabase.from('app_settings').select('unit_count, dues_amount').single()),
+    setAmount(amount) {
+      const n = Number(amount);
+      if (amount === '' || !Number.isFinite(n) || n < 0) throw new Error('Aidat tutarı geçerli bir sayı olmalıdır.');
+      return run(
+        supabase.from('app_settings').update({ dues_amount: Math.round(n * 100) / 100 }).eq('id', true).select(),
+      ).then((r) => one(r, NEEDS_ADMIN));
+    },
+  },
+
+  residents: {
+    list: () => run(supabase.rpc('list_residents')),
+    review: (userId, status) => run(supabase.rpc('review_resident', { p_user_id: userId, p_status: status })),
+  },
+
   // Herkes e-posta + şifre ile girer; daire bilgisi ilk girişte saveProfile ile alınır.
   async signIn(email, password) {
     const { error } = await supabase.auth.signInWithPassword({ email: String(email).trim(), password });
@@ -163,7 +189,7 @@ export const api = {
     const { data } = await supabase.auth.getUser();
     if (!data.user) return null;
     return run(
-      supabase.from('residents').select('apartment_no, full_name').eq('user_id', data.user.id).maybeSingle(),
+      supabase.from('residents').select('apartment_no, full_name, status').eq('user_id', data.user.id).maybeSingle(),
     );
   },
   isAdmin: () => run(supabase.rpc('is_admin')),
