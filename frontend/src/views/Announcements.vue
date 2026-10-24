@@ -16,7 +16,7 @@ async function load() {
   loading.value = true;
   error.value = '';
   try {
-    items.value = await api.get('/announcements');
+    items.value = await api.announcements.list();
   } catch (e) {
     error.value = e.message;
   } finally {
@@ -47,8 +47,8 @@ async function save() {
   formError.value = '';
   try {
     const { id, ...body } = form;
-    if (id) await api.put(`/announcements/${id}`, body);
-    else await api.post('/announcements', body);
+    if (id) await api.announcements.update(id, body);
+    else await api.announcements.create(body);
     toast(id ? 'Duyuru güncellendi.' : 'Duyuru yayınlandı.');
     formOpen.value = false;
     await load();
@@ -67,7 +67,7 @@ async function remove(a) {
     return;
   }
   try {
-    await api.del(`/announcements/${a.id}`);
+    await api.announcements.remove(a.id);
     items.value = items.value.filter((x) => x.id !== a.id);
     toast('Duyuru silindi.');
   } catch (e) {

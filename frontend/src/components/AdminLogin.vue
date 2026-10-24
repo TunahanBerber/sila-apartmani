@@ -1,14 +1,14 @@
 <script setup>
 import { ref, watch } from 'vue';
-import { KeyRound, LoaderCircle } from 'lucide-vue-next';
+import { KeyRound, LoaderCircle, Mail } from 'lucide-vue-next';
 import Modal from './Modal.vue';
-import { api } from '../api.js';
 import { admin } from '../stores/admin.js';
 import { toast } from '../stores/toast.js';
 
 const props = defineProps({ open: Boolean });
 const emit = defineEmits(['update:open']);
 
+const email = ref('');
 const password = ref('');
 const error = ref('');
 const busy = ref(false);
@@ -24,12 +24,11 @@ watch(
 );
 
 async function submit() {
-  if (!password.value) return;
+  if (!email.value || !password.value) return;
   busy.value = true;
   error.value = '';
   try {
-    await api.post('/auth/check', {}, { token: password.value });
-    admin.login(password.value);
+    await admin.login(email.value.trim(), password.value);
     toast('Yönetici moduna geçildi.');
     emit('update:open', false);
   } catch (e) {
@@ -50,14 +49,21 @@ async function submit() {
   >
     <form class="form" @submit.prevent="submit">
       <label class="field">
-        <span>Yönetici şifresi</span>
+        <span>E-posta</span>
+        <div class="input-icon">
+          <Mail :size="16" />
+          <input v-model="email" type="email" autocomplete="username" placeholder="yonetici@ornek.com" autofocus />
+        </div>
+      </label>
+      <label class="field">
+        <span>Şifre</span>
         <div class="input-icon">
           <KeyRound :size="16" />
-          <input v-model="password" type="password" autocomplete="current-password" placeholder="••••••••" autofocus />
+          <input v-model="password" type="password" autocomplete="current-password" placeholder="••••••••" />
         </div>
       </label>
       <p v-if="error" class="form-error">{{ error }}</p>
-      <button class="btn btn-primary block" type="submit" :disabled="busy || !password">
+      <button class="btn btn-primary block" type="submit" :disabled="busy || !email || !password">
         <LoaderCircle v-if="busy" :size="16" class="spin" />
         Giriş yap
       </button>

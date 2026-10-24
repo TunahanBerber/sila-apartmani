@@ -26,7 +26,7 @@ async function load() {
   loading.value = true;
   error.value = '';
   try {
-    items.value = await api.get('/expenses', { month: month.value, category: category.value, status: status.value });
+    items.value = await api.expenses.list({ month: month.value, category: category.value, status: status.value });
   } catch (e) {
     error.value = e.message;
   } finally {
@@ -71,7 +71,7 @@ const busyId = ref(null);
 async function togglePaid(e) {
   busyId.value = e.id;
   try {
-    const { expense, next } = await api.patch(`/expenses/${e.id}/pay`);
+    const { expense, next } = await api.expenses.togglePaid(e.id);
     toast(expense.status === 'odendi' ? `"${expense.title}" ödendi olarak işaretlendi.` : 'Ödeme geri alındı.');
     if (next) toast(`Sonraki dönem kaydı açıldı: ${shortDate(next.due_date)}`, 'info');
     await load();
@@ -94,7 +94,7 @@ async function remove(e) {
   }
   confirmId.value = null;
   try {
-    await api.del(`/expenses/${e.id}`);
+    await api.expenses.remove(e.id);
     items.value = items.value.filter((x) => x.id !== e.id);
     toast('Gider silindi.');
   } catch (err) {
@@ -130,8 +130,8 @@ async function save() {
   formError.value = '';
   try {
     const { id, ...body } = form;
-    if (id) await api.put(`/expenses/${id}`, body);
-    else await api.post('/expenses', body);
+    if (id) await api.expenses.update(id, body);
+    else await api.expenses.create(body);
     toast(id ? 'Gider güncellendi.' : 'Gider eklendi.');
     formOpen.value = false;
     await load();

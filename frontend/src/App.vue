@@ -10,8 +10,8 @@ import { toast } from './stores/toast.js';
 
 const loginOpen = ref(false);
 
-function logout() {
-  admin.logout();
+async function logout() {
+  await admin.logout();
   toast('Yönetici modundan çıkıldı.', 'info');
 }
 </script>

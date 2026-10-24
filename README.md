@@ -7,71 +7,84 @@ Liquid Glass tasarımlı apartman yönetim paneli.
 - **Öneriler**: sakinler öneri gönderir ve oy verir, yönetim durum ve not ekler
 - **Duyurular**: sabitlenebilir, önem derecesi olan duyurular
 
-Okuma ve öneri/oy herkese açıktır. Gider, duyuru ve öneri durumu düzenleme **yönetici şifresi** (`ADMIN_TOKEN`) ister.
+Okuma ve öneri göndermek herkese açıktır. Oy verirken arka planda anonim bir Supabase oturumu açılır, böylece herkes bir öneriye bir kez oy verir. Gider, duyuru ve öneri durumu düzenlemek **yönetici hesabı** ister.
 
 | Katman | Teknoloji |
 | --- | --- |
 | Ön yüz | Vue 3 + Vite, saf CSS (Liquid Glass) |
-| API | Node.js + Express 5 |
-| Veritabanı | PostgreSQL |
-| Lokal | Docker Compose |
-| Yayın | Vercel Services (frontend + backend tek projede) + Neon Postgres |
+| Backend | Supabase: Postgres, RLS kuralları, RPC fonksiyonları, Auth |
+| Yayın | Vercel (sadece ön yüz) |
+| Lokal | Supabase CLI (Docker) + Docker Compose (nginx) |
 
-## Lokal çalıştırma (Docker)
+Backend kodu `supabase/` klasöründedir:
 
-```bash
-cp .env.example .env          # şifreleri değiştirin
-docker compose up -d --build
+- `migrations/…_init.sql`: tablolar, RLS kuralları ve fonksiyonlar (`get_stats`, `list_suggestions`, `toggle_vote`, `toggle_expense_paid`, `is_admin`)
+- `seed.sql`: bugünün tarihine göre son 12 ayın örnek verileri
+
+## Yönetici ekleme
+
+1. Supabase panelinde **Authentication → Users → Add user** ile e-posta ve şifre belirleyerek bir kullanıcı oluşturun (**Auto Confirm User** işaretli olsun).
+2. **SQL Editor**'de çalıştırın:
+   ```sql
+   insert into admins (user_id)
+   select id from auth.users where email = 'yonetici@ornek.com';
+   ```
+3. Uygulamada **Yönetici girişi** ile bu e-posta ve şifreyle girin.
+
+Oy verme için **Authentication → Sign In / Providers → Allow anonymous sign-ins** açık olmalıdır.
+
+Daire sayısı (aidat hesaplaması için) `app_settings` tablosundadır:
+
+```sql
+update app_settings set unit_count = 16;
 ```
 
-- Uygulama: http://localhost:8080
-- API: http://localhost:4000/api/health
+## Lokal geliştirme
 
-İlk açılışta bugünün tarihine göre örnek veriler yüklenir (`SEED=false` ile kapatılır).
-
-### Docker olmadan geliştirme
+Uzak Supabase projesiyle:
 
 ```bash
-docker compose up -d db                # sadece veritabanı (5432 portunu açmak için compose'a ports ekleyin)
-npm install --prefix backend && npm run dev:api    # API  → :4000
-npm install --prefix frontend && npm run dev:web   # Vite → :5173 (/api otomatik proxy)
+cp .env.example frontend/.env.local   # URL ve publishable key'i doldurun
+npm install --prefix frontend
+npm run dev                            # http://localhost:5173
+```
+
+Tamamen lokal (Docker gerekir):
+
+```bash
+npm run db:start      # Supabase'i Docker'da başlatır, migration + seed uygular
+npx supabase status   # API URL ve publishable key burada
+```
+
+Bu değerleri `frontend/.env.local` dosyasına yazıp `npm run dev` çalıştırın. Şemayı ve verileri sıfırlamak için: `npm run db:reset`.
+
+Ön yüzü nginx ile Docker'da sunmak için:
+
+```bash
+cp .env.example .env    # değerleri doldurun
+docker compose up -d --build   # http://localhost:8080
 ```
 
 ## Vercel'de yayınlama
 
-1. Projeyi GitHub'a gönderin:
-   ```bash
-   git init && git add . && git commit -m "Sıla Apartmanı ilk sürüm"
-   git branch -M main
-   git remote add origin https://github.com/<kullanici-adiniz>/sila-apartmani.git
-   git push -u origin main
-   ```
-2. [vercel.com/new](https://vercel.com/new) adresinde repoyu **Import** edin. Vercel `vercel.json` içindeki iki servisi (frontend `/`, backend `/api`) otomatik tanır, bir şey değiştirmenize gerek yok.
-3. Vercel projesinde **Storage → Create Database → Neon (Postgres)** seçip projeye bağlayın. `DATABASE_URL` kendiliğinden eklenir.
-4. **Settings → Environment Variables** altına ekleyin:
-   - `ADMIN_TOKEN`: güçlü bir yönetici şifresi
-   - `UNIT_COUNT`: daire sayısı (varsayılan 12)
-5. **Deployments → Redeploy**. Tablolar ve örnek veriler ilk istekte otomatik oluşur.
+1. Repoyu [vercel.com/new](https://vercel.com/new) adresinde **Import** edin. **Root Directory** olarak `frontend` seçin (framework: Vite).
+2. **Settings → Environment Variables** altına `VITE_SUPABASE_URL` ve `VITE_SUPABASE_PUBLISHABLE_KEY` ekleyin.
+3. **Deploy**.
 
-Gerçek verilere geçmeden önce örnek kayıtları silmek isterseniz Neon konsolunda şunu çalıştırın:
+Gerçek verilere geçmeden önce örnek kayıtları silmek için SQL Editor'de:
 
 ```sql
-TRUNCATE expenses, suggestions, announcements RESTART IDENTITY CASCADE;
+truncate expenses, suggestions, announcements restart identity cascade;
 ```
-
-Ardından `SEED=false` ortam değişkenini ekleyin.
 
 ## Proje yapısı
 
 ```
-backend/              Express API (Vercel servisi + Docker imajı)
-  src/app.js          rotalar ve ara katmanlar
-  src/routes/         expenses, suggestions, announcements, stats
-  src/schema.js       tablo tanımları (açılışta otomatik uygulanır)
-  src/seed.js         örnek veriler
+supabase/             Backend: migration, seed, lokal Supabase ayarları
 frontend/             Vue 3 uygulaması
+  src/supabase.js     Supabase istemcisi
+  src/api.js          tüm veri erişimi (tablolar + RPC)
   src/views/          Genel Bakış, Giderler, Öneriler, Duyurular
   src/assets/main.css Liquid Glass tasarım sistemi
-docker-compose.yml    db + api + web (nginx)
-vercel.json           Vercel Services: frontend → /, backend → /api
+docker-compose.yml    ön yüz (nginx)
 ```

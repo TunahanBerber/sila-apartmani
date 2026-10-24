@@ -19,7 +19,7 @@ async function load() {
   loading.value = true;
   error.value = '';
   try {
-    items.value = await api.get('/suggestions', { sort: sort.value, status: status.value });
+    items.value = await api.suggestions.list({ sort: sort.value, status: status.value });
   } catch (e) {
     error.value = e.message;
   } finally {
@@ -45,7 +45,7 @@ async function vote(s) {
     setTimeout(() => bumped.value === s.id && (bumped.value = null), 500);
   }
   try {
-    Object.assign(s, await api.post(`/suggestions/${s.id}/vote`));
+    Object.assign(s, await api.suggestions.vote(s.id));
   } catch (e) {
     Object.assign(s, before);
     toast(e.message, 'error');
@@ -67,7 +67,7 @@ async function submit() {
   sending.value = true;
   formError.value = '';
   try {
-    const created = await api.post('/suggestions', form);
+    const created = await api.suggestions.create(form);
     try {
       localStorage.setItem('sila-resident', JSON.stringify({ author: form.author, apartment_no: form.apartment_no }));
     } catch {}
@@ -88,7 +88,7 @@ async function submit() {
 // --- Yönetici işlemleri ---
 async function setStatus(s, newStatus) {
   try {
-    Object.assign(s, await api.patch(`/suggestions/${s.id}`, { status: newStatus, admin_note: s.admin_note }));
+    Object.assign(s, await api.suggestions.update(s.id, { status: newStatus, admin_note: s.admin_note }));
     toast(`Durum: ${SUGGESTION_STATUS[newStatus].label}`);
   } catch (e) {
     toast(e.message, 'error');
@@ -103,7 +103,7 @@ function editNote(s) {
 }
 async function saveNote(s) {
   try {
-    Object.assign(s, await api.patch(`/suggestions/${s.id}`, { status: s.status, admin_note: noteDraft.value }));
+    Object.assign(s, await api.suggestions.update(s.id, { status: s.status, admin_note: noteDraft.value }));
     editingNote.value = null;
     toast('Yönetici notu kaydedildi.');
   } catch (e) {
@@ -119,7 +119,7 @@ async function remove(s) {
     return;
   }
   try {
-    await api.del(`/suggestions/${s.id}`);
+    await api.suggestions.remove(s.id);
     items.value = items.value.filter((x) => x.id !== s.id);
     toast('Öneri silindi.');
   } catch (e) {

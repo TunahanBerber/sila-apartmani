@@ -1,40 +1,13 @@
+# Ön yüzü nginx ile sunar. Veritabanı, kimlik doğrulama ve API Supabase'tedir.
+# Tamamen lokal çalışmak için: npx supabase start (Docker kullanır), ardından
+# .env içindeki adresleri `npx supabase status` çıktısındaki değerlerle değiştirin.
 services:
-  db:
-    image: postgres:16-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: sila
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sila_secret}
-      POSTGRES_DB: sila
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U sila -d sila"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-
-  api:
-    build: ./backend
-    restart: unless-stopped
-    environment:
-      DATABASE_URL: postgres://sila:${POSTGRES_PASSWORD:-sila_secret}@db:5432/sila
-      ADMIN_TOKEN: ${ADMIN_TOKEN:-sila-yonetici}
-      CORS_ORIGIN: ${CORS_ORIGIN:-*}
-      UNIT_COUNT: ${UNIT_COUNT:-12}
-    ports:
-      - "4000:4000"
-    depends_on:
-      db:
-        condition: service_healthy
-
   web:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL:?.env dosyasında VITE_SUPABASE_URL tanımlayın}
+        VITE_SUPABASE_PUBLISHABLE_KEY: ${VITE_SUPABASE_PUBLISHABLE_KEY:?.env dosyasında VITE_SUPABASE_PUBLISHABLE_KEY tanımlayın}
     restart: unless-stopped
     ports:
       - "8080:80"
-    depends_on:
-      - api
-
-volumes:
-  pgdata:

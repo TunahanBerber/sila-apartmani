@@ -18,7 +18,7 @@ const error = ref('');
 async function load() {
   error.value = '';
   try {
-    data.value = await api.get('/stats');
+    data.value = await api.stats();
   } catch (e) {
     error.value = e.message;
   }
