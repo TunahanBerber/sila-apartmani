@@ -5,7 +5,7 @@ import { api } from '../api.js';
 import Segmented from '../components/Segmented.vue';
 import StatePanel from '../components/StatePanel.vue';
 import { SUGGESTION_CATEGORIES, SUGGESTION_STATUS } from '../constants.js';
-import { admin } from '../stores/admin.js';
+import { session } from '../stores/session.js';
 import { toast } from '../stores/toast.js';
 import { timeAgo } from '../utils/format.js';
 
@@ -53,24 +53,15 @@ async function vote(s) {
 }
 
 // --- Yeni öneri ---
-const form = reactive({ title: '', description: '', author: '', apartment_no: '', category: 'genel' });
+const form = reactive({ title: '', description: '', category: 'genel' });
 const sending = ref(false);
 const formError = ref('');
-
-try {
-  const saved = JSON.parse(localStorage.getItem('sila-resident') || '{}');
-  form.author = saved.author || '';
-  form.apartment_no = saved.apartment_no || '';
-} catch {}
 
 async function submit() {
   sending.value = true;
   formError.value = '';
   try {
     const created = await api.suggestions.create(form);
-    try {
-      localStorage.setItem('sila-resident', JSON.stringify({ author: form.author, apartment_no: form.apartment_no }));
-    } catch {}
     form.title = '';
     form.description = '';
     toast('Öneriniz yönetime iletildi. Teşekkürler!');
@@ -202,7 +193,7 @@ const statusFilter = [{ value: '', label: 'Tümü' }, ...Object.entries(SUGGESTI
                 <span><b>Yönetim:</b> {{ s.admin_note }}</span>
               </div>
 
-              <div v-if="admin.isAdmin" class="admin-tools">
+              <div v-if="session.isAdmin" class="admin-tools">
                 <select :value="s.status" aria-label="Durum" @change="setStatus(s, $event.target.value)">
                   <option v-for="(st, key) in SUGGESTION_STATUS" :key="key" :value="key">{{ st.label }}</option>
                 </select>
@@ -224,7 +215,7 @@ const statusFilter = [{ value: '', label: 'Tümü' }, ...Object.entries(SUGGESTI
 
       <aside class="compose glass">
         <h3>Bir öneriniz mi var?</h3>
-        <p class="muted small">Önerileriniz yönetime iletilir, komşularınız oy verebilir.</p>
+        <p class="muted small">Öneriniz adınız ve daire numaranızla yönetime iletilir, komşularınız oy verebilir.</p>
         <form class="form" @submit.prevent="submit">
           <label class="field">
             <span>Başlık</span>
@@ -249,16 +240,6 @@ const statusFilter = [{ value: '', label: 'Tümü' }, ...Object.entries(SUGGESTI
               </button>
             </div>
           </label>
-          <div class="form-row">
-            <label class="field">
-              <span>Adınız</span>
-              <input v-model="form.author" maxlength="60" placeholder="İsteğe bağlı" />
-            </label>
-            <label class="field narrow">
-              <span>Daire</span>
-              <input v-model="form.apartment_no" maxlength="10" placeholder="No" />
-            </label>
-          </div>
           <p v-if="formError" class="form-error">{{ formError }}</p>
           <button class="btn btn-primary block" type="submit" :disabled="sending">
             <LoaderCircle v-if="sending" :size="16" class="spin" />

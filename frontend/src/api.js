@@ -21,8 +21,6 @@ function friendly(error) {
     case '22007':
     case '22008':
       return 'Tutar ya da tarih geçerli değil.';
-    case 'anonymous_provider_disabled':
-      return 'Oy verme şu an kapalı. Yönetim anonim girişi etkinleştirmeli.';
   }
   return 'İşlem başarısız oldu.';
 }
@@ -80,13 +78,6 @@ function announcementRow(b) {
   };
 }
 
-// Oy vermek için bir oturum gerekir; giriş yapmamış sakinler için anonim oturum açılır.
-async function ensureSession() {
-  const { data } = await supabase.auth.getSession();
-  if (data.session) return;
-  await run(supabase.auth.signInAnonymously());
-}
-
 function nextMonth(key) {
   const [y, m] = key.split('-').map(Number);
   return m === 12 ? `${y + 1}-01-01` : `${y}-${String(m + 1).padStart(2, '0')}-01`;
@@ -114,20 +105,16 @@ export const api = {
   suggestions: {
     list: ({ sort, status } = {}) => run(supabase.rpc('list_suggestions', { p_sort: sort, p_status: status || null })),
     async create(b) {
+      // Ad ve daire no veritabanında sakin kaydından doldurulur.
       const row = {
         title: required(b.title, 'Başlık'),
         description: required(b.description, 'Açıklama'),
-        author: clean(b.author),
-        apartment_no: clean(b.apartment_no),
         category: b.category || 'genel',
       };
       const rows = await run(supabase.from('suggestions').insert(row).select());
       return { ...rows[0], votes: 0, voted: false };
     },
-    async vote(id) {
-      await ensureSession();
-      return run(supabase.rpc('toggle_vote', { p_id: id }));
-    },
+    vote: (id) => run(supabase.rpc('toggle_vote', { p_id: id })),
     update: (id, { status, admin_note }) =>
       run(supabase.from('suggestions').update({ status, admin_note: clean(admin_note) }).eq('id', id).select()).then((r) =>
         one(r, NEEDS_ADMIN),
@@ -154,16 +141,30 @@ export const api = {
     remove: (id) => run(supabase.from('announcements').delete().eq('id', id).select('id')).then((r) => one(r, NEEDS_ADMIN)),
   },
 
-  // Yönetici girişi: Supabase Auth hesabı + public.admins tablosunda kayıt.
+  // Herkes e-posta + şifre ile girer; daire bilgisi ilk girişte saveProfile ile alınır.
   async signIn(email, password) {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({ email: String(email).trim(), password });
     if (error) {
       throw new Error(/invalid/i.test(error.message) ? 'E-posta ya da şifre hatalı.' : friendly(error));
     }
-    if (!(await run(supabase.rpc('is_admin')))) {
-      await supabase.auth.signOut();
-      throw new Error('Bu hesabın yönetici yetkisi yok.');
+  },
+  async register({ email, password }) {
+    const { error } = await supabase.functions.invoke('register', { body: { email: String(email).trim(), password } });
+    if (error) {
+      const body = await error.context?.json?.().catch(() => null);
+      throw new Error(body?.error || friendly(error));
     }
+  },
+  saveProfile: ({ apartment_no, full_name }) =>
+    run(supabase.rpc('save_profile', { p_apartment_no: Number(apartment_no), p_full_name: full_name })),
+  unitCount: () =>
+    run(supabase.from('app_settings').select('unit_count').single()).then((r) => r.unit_count),
+  myResident: async () => {
+    const { data } = await supabase.auth.getUser();
+    if (!data.user) return null;
+    return run(
+      supabase.from('residents').select('apartment_no, full_name').eq('user_id', data.user.id).maybeSingle(),
+    );
   },
   isAdmin: () => run(supabase.rpc('is_admin')),
   signOut: () => supabase.auth.signOut(),

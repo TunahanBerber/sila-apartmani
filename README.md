@@ -7,7 +7,7 @@ Liquid Glass tasarımlı apartman yönetim paneli.
 - **Öneriler**: sakinler öneri gönderir ve oy verir, yönetim durum ve not ekler
 - **Duyurular**: sabitlenebilir, önem derecesi olan duyurular
 
-Okuma ve öneri göndermek herkese açıktır. Oy verirken arka planda anonim bir Supabase oturumu açılır, böylece herkes bir öneriye bir kez oy verir. Gider, duyuru ve öneri durumu düzenlemek **yönetici hesabı** ister.
+Uygulama sadece giriş yapanlara açıktır. Sakinler **e-posta + şifre** ile kayıt olur, ilk girişte daire numarası ve adını girer (aynı dairede birden fazla kişi olabilir). Öneriler bu bilgiyle gönderilir, herkes bir öneriye bir kez oy verir. Gider, duyuru ve öneri durumu düzenlemek **yönetici hesabı** ister.
 
 | Katman | Teknoloji |
 | --- | --- |
@@ -18,20 +18,21 @@ Okuma ve öneri göndermek herkese açıktır. Oy verirken arka planda anonim bi
 
 Backend kodu `supabase/` klasöründedir:
 
-- `migrations/…_init.sql`: tablolar, RLS kuralları ve fonksiyonlar (`get_stats`, `list_suggestions`, `toggle_vote`, `toggle_expense_paid`, `is_admin`)
+- `migrations/`: tablolar, RLS kuralları ve fonksiyonlar (`get_stats`, `list_suggestions`, `toggle_vote`, `toggle_expense_paid`, `save_profile`, `is_admin`)
+- `functions/register`: kayıt (e-posta doğrulaması beklemeden hesap açar)
 - `seed.sql`: bugünün tarihine göre son 12 ayın örnek verileri
 
 ## Yönetici ekleme
 
-1. Supabase panelinde **Authentication → Users → Add user** ile e-posta ve şifre belirleyerek bir kullanıcı oluşturun (**Auto Confirm User** işaretli olsun).
+1. Uygulamadan normal şekilde kayıt olun (ya da Supabase panelinde **Authentication → Users → Add user**).
 2. **SQL Editor**'de çalıştırın:
    ```sql
    insert into admins (user_id)
    select id from auth.users where email = 'yonetici@ornek.com';
    ```
-3. Uygulamada **Yönetici girişi** ile bu e-posta ve şifreyle girin.
+3. Bu e-posta ve şifreyle girin. Yöneticilerden daire bilgisi istenmez.
 
-Oy verme için **Authentication → Sign In / Providers → Allow anonymous sign-ins** açık olmalıdır.
+Bir sakini çıkarmak için Supabase panelinde **Authentication → Users**'tan kullanıcıyı silin (daire kaydı da silinir).
 
 Daire sayısı (aidat hesaplaması için) `app_settings` tablosundadır:
 

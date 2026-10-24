@@ -9,7 +9,7 @@ import Segmented from '../components/Segmented.vue';
 import StatePanel from '../components/StatePanel.vue';
 import AnimatedNumber from '../components/AnimatedNumber.vue';
 import { EXPENSE_CATEGORIES, RECURRING, expenseCategory } from '../constants.js';
-import { admin } from '../stores/admin.js';
+import { session } from '../stores/session.js';
 import { toast } from '../stores/toast.js';
 import { dueLabel, money, monthLong, shiftMonth, shortDate, toMonthKey, todayIso } from '../utils/format.js';
 
@@ -150,7 +150,7 @@ async function save() {
         <p class="eyebrow">Gider takibi</p>
         <h1 class="display">Giderler</h1>
       </div>
-      <button v-if="admin.isAdmin" class="btn btn-primary" type="button" @click="openForm()">
+      <button v-if="session.isAdmin" class="btn btn-primary" type="button" @click="openForm()">
         <Plus :size="18" /> Yeni gider
       </button>
     </header>
@@ -222,7 +222,7 @@ async function save() {
     <StatePanel
       v-else-if="!visible.length"
       title="Bu filtrelerle gider bulunamadı"
-      :message="admin.isAdmin ? 'Yeni bir gider ekleyebilir ya da filtreleri değiştirebilirsiniz.' : 'Filtreleri değiştirmeyi deneyin.'"
+      :message="session.isAdmin ? 'Yeni bir gider ekleyebilir ya da filtreleri değiştirebilirsiniz.' : 'Filtreleri değiştirmeyi deneyin.'"
     />
     <TransitionGroup v-else tag="ul" name="list" class="list" :class="{ dimmed: loading }">
       <li
@@ -260,7 +260,7 @@ async function save() {
           </span>
         </div>
 
-        <div v-if="admin.isAdmin" class="expense-actions">
+        <div v-if="session.isAdmin" class="expense-actions">
           <button
             class="icon-btn glass"
             :class="e.status === 'odendi' ? '' : 'pay'"

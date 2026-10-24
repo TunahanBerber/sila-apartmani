@@ -4,7 +4,7 @@ import { BellRing, LoaderCircle, Pencil, Pin, Plus, Trash2 } from 'lucide-vue-ne
 import { api } from '../api.js';
 import Modal from '../components/Modal.vue';
 import StatePanel from '../components/StatePanel.vue';
-import { admin } from '../stores/admin.js';
+import { session } from '../stores/session.js';
 import { toast } from '../stores/toast.js';
 import { longDate, timeAgo } from '../utils/format.js';
 
@@ -83,7 +83,7 @@ async function remove(a) {
         <p class="eyebrow">Yönetimden</p>
         <h1 class="display">Duyurular</h1>
       </div>
-      <button v-if="admin.isAdmin" class="btn btn-primary" type="button" @click="openForm()">
+      <button v-if="session.isAdmin" class="btn btn-primary" type="button" @click="openForm()">
         <Plus :size="18" /> Yeni duyuru
       </button>
     </header>
@@ -108,7 +108,7 @@ async function remove(a) {
           <span v-if="a.priority === 'onemli'" class="tag danger">Önemli</span>
         </div>
         <p class="announcement-body">{{ a.body }}</p>
-        <div v-if="admin.isAdmin" class="admin-tools">
+        <div v-if="session.isAdmin" class="admin-tools">
           <button class="btn glass sm" type="button" @click="openForm(a)"><Pencil :size="14" /> Düzenle</button>
           <button class="icon-btn glass danger sm" :class="{ confirming: confirmId === a.id }" type="button" @click="remove(a)">
             <Trash2 :size="14" /><span v-if="confirmId === a.id">Sil?</span>

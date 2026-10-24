@@ -1160,3 +1160,37 @@ ul.list { position: relative; }
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .glass { background: var(--glass-strong-top); }
 }
+
+/* ---------- Giriş / kayıt ---------- */
+.admin-pill.resident { color: var(--text); }
+.auth-screen {
+  position: relative;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 24px 16px;
+}
+.auth-card {
+  width: min(420px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 28px;
+  border-radius: 32px;
+}
+.auth-brand { display: flex; align-items: center; gap: 14px; }
+.auth-brand .brand-mark { width: 52px; height: 52px; }
+.auth-brand h1 { font-size: 22px; letter-spacing: -0.02em; }
+.auth-brand p { font-size: 13.5px; margin-top: 2px; }
+.auth-card .segmented { width: 100%; }
+.auth-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-size: 13px;
+}
+.auth-link:hover { color: var(--text); }

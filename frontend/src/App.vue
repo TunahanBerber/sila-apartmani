@@ -1,18 +1,15 @@
 <script setup>
-import { ref } from 'vue';
 import { LogOut, Moon, ShieldCheck, Sun, UserRound } from 'lucide-vue-next';
 import TabBar from './components/TabBar.vue';
-import AdminLogin from './components/AdminLogin.vue';
+import AuthScreen from './components/AuthScreen.vue';
 import ToastHost from './components/ToastHost.vue';
-import { admin } from './stores/admin.js';
+import { session, signOut } from './stores/session.js';
 import { theme, toggleTheme } from './stores/theme.js';
 import { toast } from './stores/toast.js';
 
-const loginOpen = ref(false);
-
 async function logout() {
-  await admin.logout();
-  toast('Yönetici modundan çıkıldı.', 'info');
+  await signOut();
+  toast('Çıkış yapıldı.', 'info');
 }
 </script>
 
@@ -25,49 +22,50 @@ async function logout() {
     <span class="grain" />
   </div>
 
-  <header class="topbar">
-    <RouterLink to="/" class="brand">
-      <span class="brand-mark glass">
-        <svg viewBox="0 0 64 64" aria-hidden="true">
-          <path d="M18 50V24l14-10 14 10v26" />
-          <path d="M27 50V38h10v12" />
-        </svg>
-      </span>
-      <span class="brand-text">
-        <strong>Sıla Apartmanı</strong>
-        <small>Yönetim Paneli</small>
-      </span>
-    </RouterLink>
+  <AuthScreen v-if="session.ready && (!session.user || session.needsProfile)" />
 
-    <div class="topbar-actions">
-      <button class="icon-btn glass" type="button" :aria-label="theme === 'dark' ? 'Açık tema' : 'Koyu tema'" @click="toggleTheme">
-        <Transition name="swap" mode="out-in">
-          <Sun v-if="theme === 'dark'" key="sun" :size="18" />
-          <Moon v-else key="moon" :size="18" />
-        </Transition>
-      </button>
+  <template v-else-if="session.ready">
+    <header class="topbar">
+      <RouterLink to="/" class="brand">
+        <span class="brand-mark glass">
+          <svg viewBox="0 0 64 64" aria-hidden="true">
+            <path d="M18 50V24l14-10 14 10v26" />
+            <path d="M27 50V38h10v12" />
+          </svg>
+        </span>
+        <span class="brand-text">
+          <strong>Sıla Apartmanı</strong>
+          <small>Yönetim Paneli</small>
+        </span>
+      </RouterLink>
 
-      <div v-if="admin.isAdmin" class="admin-pill glass">
-        <ShieldCheck :size="16" />
-        <span>Yönetici</span>
-        <button type="button" aria-label="Çıkış yap" title="Çıkış yap" @click="logout"><LogOut :size="15" /></button>
+      <div class="topbar-actions">
+        <button class="icon-btn glass" type="button" :aria-label="theme === 'dark' ? 'Açık tema' : 'Koyu tema'" @click="toggleTheme">
+          <Transition name="swap" mode="out-in">
+            <Sun v-if="theme === 'dark'" key="sun" :size="18" />
+            <Moon v-else key="moon" :size="18" />
+          </Transition>
+        </button>
+
+        <div class="admin-pill glass" :class="{ resident: !session.isAdmin }" :title="session.user.email">
+          <ShieldCheck v-if="session.isAdmin" :size="16" />
+          <UserRound v-else :size="16" />
+          <span v-if="session.isAdmin">Yönetici</span>
+          <span v-else>Daire {{ session.resident.apartment_no }}<span class="hide-sm"> · {{ session.resident.full_name }}</span></span>
+          <button type="button" aria-label="Çıkış yap" title="Çıkış yap" @click="logout"><LogOut :size="15" /></button>
+        </div>
       </div>
-      <button v-else class="btn glass" type="button" @click="loginOpen = true">
-        <UserRound :size="16" />
-        <span class="hide-sm">Yönetici girişi</span>
-      </button>
-    </div>
-  </header>
+    </header>
 
-  <main class="content">
-    <RouterView v-slot="{ Component }">
-      <Transition name="page" mode="out-in">
-        <component :is="Component" />
-      </Transition>
-    </RouterView>
-  </main>
+    <main class="content">
+      <RouterView v-slot="{ Component }">
+        <Transition name="page" mode="out-in">
+          <component :is="Component" />
+        </Transition>
+      </RouterView>
+    </main>
 
-  <TabBar />
-  <AdminLogin v-model:open="loginOpen" />
+    <TabBar />
+  </template>
   <ToastHost />
 </template>
