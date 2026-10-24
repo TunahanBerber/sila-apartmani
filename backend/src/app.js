@@ -9,12 +9,6 @@ import stats from './routes/stats.js';
 
 const app = express();
 
-// Vercel servis modunda /api ön eki kırpılarak gelebilir; rotalar her iki durumda da eşleşsin.
-app.use((req, _res, next) => {
-  if (!req.url.startsWith('/api')) req.url = `/api${req.url === '/' ? '' : req.url}`;
-  next();
-});
-
 const origins = (process.env.CORS_ORIGIN || '*').split(',').map((s) => s.trim()).filter(Boolean);
 app.set('trust proxy', 1);
 app.disable('x-powered-by');
